@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alex_Piloto is Away</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+New:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(45deg, #0a0a2e, #1a1a3e, #2a2a5e);
+            font-family: 'Courier New', monospace;
+            color: #00ddff;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .terminal-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.85);
+            border: 2px solid #00ddff;
+            border-radius: 12px;
+        }
+        
+        .header {
+            background: linear-gradient(90deg, #000428, #004e92);
+            padding: 12px 20px;
+            border-bottom: 2px solid #00ddff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #00ff88;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
+        }
+        
+        .chat-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: rgba(0, 20, 40, 0.4);
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%);
+        }
+        
+        .message {
+            margin: 18px 0;
+            animation: slideIn 0.6s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .system-message {
+            color: #ffdd00;
+            font-style: italic;
+            text-align: center;
+            margin: 12px 0;
+            background: rgba(255, 221, 0, 0.1);
+            padding: 8px;
+            border-radius: 6px;
+        }
+        
+        .alex-message {
+            color: #00ddff;
+            background: rgba(0, 221, 255, 0.05);
+            padding: 10px 15px;
+            border-left: 3px solid #00ddff;
+            border-radius: 8px;
+        }
+        
+        .player-message {
+            color: #ff6b9d;
+            text-align: right;
+            background: rgba(255, 107, 157, 0.05);
+            padding: 10px 15px;
+            border-right: 3px solid #ff6b9d;
+            border-radius: 8px;
+        }
+        
+        .typing-indicator {
+            color: #888;
+            font-style: italic;
+            animation: blink 1.5s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+        
+        .choices-container {
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.95), rgba(0, 20, 40, 0.95));
+            border-top: 2px solid #00ddff;
+            padding: 20px;
+            min-height: 140px;
+        }
+        
+        .choice-button {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 15px 20px;
+            background: linear-gradient(90deg, transparent, rgba(0, 221, 255, 0.1), transparent);
+            border: 1px solid #00ddff;
+            color: #00ddff;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .choice-button:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 221, 255, 0.2), transparent);
+            transition: left 0.4s ease;
+        }
+        
+        .choice-button:hover:before {
+            left: 100%;
+        }
+        
+        .choice-button:hover {
+            background: rgba(0, 221, 255, 0.15);
+            transform: translateX(8px);
+            box-shadow: 0 0 20px rgba(0, 221, 255, 0.3);
+        }
+        
+        .choice-button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .physics-info {
+            background: linear-gradient(90deg, rgba(0, 255, 136, 0.15), rgba(0, 200, 255, 0.15));
+            border: 1px solid #00ff88;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 13px;
+            color: #00ff88;
+            position: relative;
+        }
+        
+        .physics-info:before {
+            content: "⚡ FÍSICA EM AÇÃO";
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: #000;
+            padding: 2px 8px;
+            font-size: 10px;
+            font-weight: bold;
+            color: #00ff88;
+        }
+        
+        .speed-meter {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #00ff88;
+            border: 1px solid #00ff88;
+        }
+        
+        .newton-law {
+            position: fixed;
+            bottom: 15px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #ffdd00;
+            border: 1px solid #ffdd00;
+            max-width: 250px;
+        }
+        
+        .force-diagram {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px dashed #00ddff;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            text-align: center;
+            color: #cccccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="speed-meter" id="speedMeter">Velocidade: 0 km/h</div>
+    <div class="newton-law" id="newtonLaw">1ª Lei de Newton: Lei da Inércia</div>
+    
+    <div class="terminal-container">
+        <div class="header">
+            <div class="status-bar">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="userStatus">Alex_Piloto está online</span>
+            </div>
+            <div>🏎️ Chat da Corrida - F1 Training Center</div>
+        </div>
+        
+        <div class="chat-container" id="chatContainer">
+            <div class="system-message">💨 Conectado ao sistema de comunicação F1</div>
+            <div class="system-message">Você é um(a) estudante de física conversando com Alex, piloto em treinamento</div>
+            <div class="system-message">Alex está em seu primeiro dia na pista de corrida!</div>
+        </div>
+        
+        <div class="choices-container" id="choicesContainer">
+            <div style="color: #888; margin-bottom: 15px;">🏁 Aguardando conexão com o piloto...</div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            currentScene: 0,
+            physicsScore: 0,
+            alexTrust: 50,
+            currentSpeed: 0,
+            currentLaw: 1,
+            understanding: {
+                inertia: 0,
+                force: 0,
+                acceleration: 0
+            }
+        };
+
+        const scenes = [
+            {
+                alexMessage: "Oi! Você estuda física, né? Preciso de ajuda... 😰",
+                delay: 2000,
+                speed: 0,
+                choices: [
+                    { text: "Oi Alex! Sim, estudo física. O que está acontecendo?", effect: { trust: +5, physics: +2 }, next: 1 },
+                    { text: "Claro! Conte comigo. Algum problema na pista?", effect: { trust: +8, physics: +1 }, next: 1 },
+                    { text: "Oi! Por que precisa de ajuda com física?", effect: { trust: +3 }, next: 1 }
+                ]
+            },
+            {
+                alexMessage: "Estou no carro parado na pista, mas quando solto o freio...",
+                delay: 2500,
+                typing: "Alex_Piloto está digitando...",
+                secondMessage: "O carro NÃO SAI DO LUGAR! Por quê?? 😤",
+                speed: 0,
+                choices: [
+                    { text: "Isso é inércia! Objetos parados tendem a ficar parados.", effect: { physics: +10, trust: +5, inertia: +5 }, next: 2 },
+                    { text: "Você precisa aplicar uma FORÇA para vencer a inércia!", effect: { physics: +8, trust: +3, force: +3 }, next: 3 },
+                    { text: "Tenta acelerar? Talvez seja problema no motor...", effect: { trust: +2 }, next: 4 }
+                ]
+            },
+            {
+                alexMessage: "Inércia? Isso tem a ver com aquela 1ª Lei de Newton?",
+                delay: 2000,
+                physics: "FÍSICA: 1ª Lei de Newton (Inércia) - Um corpo em repouso tende a permanecer em repouso, e um corpo em movimento tende a permanecer em movimento, a menos que uma força externa atue sobre ele.",
+                newtonLaw: 1,
+                choices: [
+                    { text: "Exato! Todo objeto 'resiste' a mudanças no seu estado de movimento", effect: { physics: +12, inertia: +8 }, next: 5 },
+                    { text: "Sim! Por isso você precisa FORÇAR o carro a sair do lugar", effect: { physics: +10, force: +5 }, next: 5 },
+                    { text: "É isso! Agora pise no acelerador para aplicar uma força!", effect: { physics: +8, trust: +5 }, next: 6 }
+                ]
+            },
+            {
+                alexMessage: "Força! Entendi... então é só pisar no acelerador?",
+                delay: 1500,
+                physics: "FÍSICA: Força é o que causa mudança no movimento. F = ma (Força = massa × aceleração)",
+                choices: [
+                    { text: "Isso! A força do motor vai vencer a inércia do carro parado", effect: { physics: +10, force: +8 }, next: 6 },
+                    { text: "Exato! Quanto mais força, mais rápido você acelera", effect: { physics: +8, acceleration: +5 }, next: 6 },
+                    { text: "Sim, mas cuidado! Muita força = muita aceleração!", effect: { physics: +6, trust: +8 }, next: 6 }
+                ]
+            },
+            {
+                alexMessage: "Hmm, deixa eu tentar acelerar devagar primeiro...",
+                delay: 2000,
+                typing: "Alex_Piloto está acelerando...",
+                secondMessage: "EI! O carro começou a se mover! Mas bem devagar... 🐌",
+                speed: 20,
+                choices: [
+                    { text: "Perfeito! Pouca força = pouca aceleração. Isso é a 2ª Lei!", effect: { physics: +15, acceleration: +10 }, next: 7 },
+                    { text: "Viu? Você venceu a inércia! Agora pode acelerar mais", effect: { physics: +8, inertia: +5 }, next: 8 },
+                    { text: "Boa! A força está causando aceleração no carro", effect: { physics: +10, force: +5 }, next: 7 }
+                ]
+            },
+            {
+                alexMessage: "Legal! Agora vou acelerar mais...",
+                delay: 1000,
+                typing: "Alex_Piloto pisou fundo!",
+                secondMessage: "UAAAU! Agora sim! Velocidade aumentando rápido! 🏎️💨",
+                speed: 80,
+                physics: "FÍSICA: 2ª Lei de Newton - F = ma. Mais força aplicada = maior aceleração!",
+                newtonLaw: 2,
+                choices: [
+                    { text: "Isso é a 2ª Lei de Newton! F = ma (Força = massa × aceleração)", effect: { physics: +15, acceleration: +10 }, next: 9 },
+                    { text: "Viu como mais força gerou mais aceleração?", effect: { physics: +12, force: +8 }, next: 9 },
+                    { text: "Cuidado! Muita aceleração pode ser perigosa na curva!", effect: { physics: +5, trust: +10 }, next: 10 }
+                ]
+            },
+            {
+                alexMessage: "Entendi! Então F = m × a significa que...",
+                delay: 2000,
+                typing: "Alex_Piloto está pensando...",
+                secondMessage: "Se eu quiser acelerar mais rápido, preciso de mais FORÇA! 🤔",
+                speed: 60,
+                choices: [
+                    { text: "Exatamente! E se o carro fosse mais pesado, precisaria de ainda mais força", effect: { physics: +18, acceleration: +12 }, next: 11 },
+                    { text: "Isso mesmo! Força e aceleração são proporcionais", effect: { physics: +15, force: +8 }, next: 11 },
+                    { text: "Perfeito! Agora você entende como funciona a aceleração!", effect: { physics: +12, trust: +8 }, next: 11 }
+                ]
+            },
+            {
+                alexMessage: "Opa, chegando na curva! Vou tirar o pé do acelerador...",
+                delay: 2000,
+                typing: "Alex_Piloto soltou o acelerador",
+                secondMessage: "Estranho... o carro continua andando mesmo sem acelerar! 😮",
+                speed: 85,
+                choices: [
+                    { text: "Isso é inércia de novo! Agora o corpo em MOVIMENTO quer continuar se movendo", effect: { physics: +20, inertia: +15 }, next: 12 },
+                    { text: "Exato! A 1ª Lei funciona pros dois casos: parado E em movimento", effect: { physics: +18, inertia: +10 }, next: 12 },
+                    { text: "Por isso existem freios! Para aplicar força CONTRÁRIA ao movimento", effect: { physics: +15, force: +10 }, next: 13 }
+                ]
+            },
+            {
+                alexMessage: "Ahhh! Então a inércia funciona pros dois lados?",
+                delay: 1500,
+                typing: "Alex_Piloto está freando suavemente",
+                secondMessage: "Parado quer ficar parado, andando quer continuar andando! 🧠💡",
+                speed: 45,
+                physics: "FÍSICA: A inércia é a tendência dos objetos manterem seu estado atual - seja repouso ou movimento retilíneo uniforme.",
+                choices: [
+                    { text: "PERFEITO! Você entendeu a 1ª Lei de Newton completamente!", effect: { physics: +25, inertia: +20, trust: +15 }, next: 14 },
+                    { text: "Isso! E os freios aplicam força para mudar esse estado", effect: { physics: +20, force: +15 }, next: 14 },
+                    { text: "Exato! Newton foi um gênio ao perceber isso há 300 anos!", effect: { physics: +15, trust: +10 }, next: 14 }
+                ]
+            }
+        ];
+
+        let currentChoices = [];
+        let isTyping = false;
+
+        function updateSpeedMeter(speed) {
+            document.getElementById('speedMeter').textContent = `Velocidade: ${speed} km/h`;
+            gameState.currentSpeed = speed;
+        }
+
+        function updateNewtonLaw(lawNumber) {
+            const laws = {
+                1: "1ª Lei de Newton: Lei da Inércia",
+                2: "2ª Lei de Newton: F = ma",
+                3: "3ª Lei de Newton: Ação e Reação"
+            };
+            document.getElementById('newtonLaw').textContent = laws[lawNumber];
+        }
+
+        function addMessage(content, type = 'alex', isSystem = false) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            
+            if (isSystem) {
+                messageDiv.className = 'message system-message';
+            } else {
+                messageDiv.className = `message ${type}-message`;
+            }
+            
+            messageDiv.innerHTML = content;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function addPhysicsInfo(info) {
+            const chatContainer = document.getElementById('chatContainer');
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'physics-info';
+            infoDiv.innerHTML = info;
+            chatContainer.appendChild(infoDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function addForceDiagram(forces) {
+            const diagram = `
+                <div class="force-diagram">
+                    <div>═══ DIAGRAMA DE FORÇAS ═══</div>
+                    <div style="margin: 8px 0;">
+                        ${forces.map(f => `${f.name}: ${f.value} → ${f.direction}`).join('<br>')}
+                    </div>
+                </div>
+            `;
+            
+            const chatContainer = document.getElementById('chatContainer');
+            const diagramDiv = document.createElement('div');
+            diagramDiv.innerHTML = diagram;
+            chatContainer.appendChild(diagramDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function simulateTyping(message, callback, delay = 80) {
+            isTyping = true;
+            document.getElementById('userStatus').innerHTML = '🏎️ Alex_Piloto está digitando...';
+            
+            let dots = 0;
+            const typingInterval = setInterval(() => {
+                dots = (dots + 1) % 4;
+                document.getElementById('userStatus').innerHTML = `🏎️ Alex_Piloto está digitando${'.'.repeat(dots)}`;
+            }, 500);
+            
+            setTimeout(() => {
+                clearInterval(typingInterval);
+                isTyping = false;
+                document.getElementById('userStatus').innerHTML = '🏎️ Alex_Piloto está online';
+                callback();
+            }, delay * message.length + 1000);
+        }
+
+        function showChoices(choices) {
+            const container = document.getElementById('choicesContainer');
+            container.innerHTML = '<div style="color: #888; margin-bottom: 15px;">🤔 Como você vai ajudar Alex?</div>';
+            
+            choices.forEach((choice, index) => {
+                const button = document.createElement('button');
+                button.className = 'choice-button';
+                button.innerHTML = `<strong>${index + 1}.</strong> ${choice.text}`;
+                button.onclick = () => selectChoice(choice, index);
+                container.appendChild(button);
+            });
+            currentChoices = choices;
+        }
+
+        function selectChoice(choice, index) {
+            const buttons = document.querySelectorAll('.choice-button');
+            buttons.forEach(btn => btn.disabled = true);
+            
+            addMessage(choice.text, 'player');
+            
+            if (choice.effect) {
+                if (choice.effect.trust) gameState.alexTrust += choice.effect.trust;
+                if (choice.effect.physics) gameState.physicsScore += choice.effect.physics;
+                if (choice.effect.inertia) gameState.understanding.inertia += choice.effect.inertia;
+                if (choice.effect.force) gameState.understanding.force += choice.effect.force;
+                if (choice.effect.acceleration) gameState.understanding.acceleration += choice.effect.acceleration;
+            }
+            
+            setTimeout(() => {
+                if (choice.next < scenes.length) {
+                    playScene(choice.next);
+                } else {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function playScene(sceneIndex) {
+            const scene = scenes[sceneIndex];
+            gameState.currentScene = sceneIndex;
+            
+            if (scene.speed !== undefined) {
+                updateSpeedMeter(scene.speed);
+            }
+            
+            if (scene.newtonLaw) {
+                updateNewtonLaw(scene.newtonLaw);
+            }
+            
+            setTimeout(() => {
+                simulateTyping(scene.alexMessage, () => {
+                    addMessage(scene.alexMessage);
+                    
+                    if (scene.physics) {
+                        setTimeout(() => {
+                            addPhysicsInfo(scene.physics);
+                        }, 1000);
+                    }
+                    
+                    if (scene.forceDiagram) {
+                        setTimeout(() => {
+                            addForceDiagram(scene.forceDiagram);
+                        }, 1500);
+                    }
+                    
+                    if (scene.secondMessage) {
+                        setTimeout(() => {
+                            simulateTyping(scene.secondMessage, () => {
+                                addMessage(scene.secondMessage);
+                                setTimeout(() => showChoices(scene.choices), 1000);
+                            });
+                        }, 2000);
+                    } else {
+                        setTimeout(() => showChoices(scene.choices), 1500);
+                    }
+                }, 60);
+            }, scene.delay || 1000);
+        }
+
+        function endGame() {
+            updateSpeedMeter(0);
+            addMessage("Cara, MUITO OBRIGADO! Agora entendo as Leis de Newton! 🏆", 'alex');
+            
+            setTimeout(() => {
+                addMessage("--- RELATÓRIO DE APRENDIZAGEM ---", '', true);
+                addMessage(`🧠 Pontuação em Física: ${gameState.physicsScore}/150`, '', true);
+                addMessage(`🤝 Confiança do Alex: ${gameState.alexTrust}/100`, '', true);
+                addMessage(`⚖️ Compreensão de Inércia: ${gameState.understanding.inertia}/50`, '', true);
+                addMessage(`💪 Compreensão de Força: ${gameState.understanding.force}/50`, '', true);
+                addMessage(`🏃‍♂️ Compreensão de Aceleração: ${gameState.understanding.acceleration}/50`, '', true);
+                
+                let performance = "Iniciante";
+                if (gameState.physicsScore > 100) performance = "Bom entendimento";
+                if (gameState.physicsScore > 120) performance = "Excelente!";
+                if (gameState.physicsScore > 140) performance = "Físico(a) em formação! 🌟";
+                
+                addMessage(`🎯 Avaliação: ${performance}`, '', true);
+            }, 2000);
+        }
+
+        // Iniciar o jogo
+        setTimeout(() => {
+            playScene(0);
+        }, 2000);
+
+        // Pequenas animações na interface
+        setInterval(() => {
+            if (gameState.currentSpeed > 50) {
+                document.querySelector('.speed-meter').style.color = '#ff6b6b';
+                document.querySelector('.speed-meter').style.animation = 'pulse 1s infinite';
+            } else {
+                document.querySelector('.speed-meter').style.color = '#00ff88';
+                document.querySelector('.speed-meter').style.animation = 'none';
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
